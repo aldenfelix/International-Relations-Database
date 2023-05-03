@@ -1,4 +1,14 @@
+# install.packages(c("DBI", "RPostgres", "shiny))
 library(shiny)
+library(DBI)
+library(RPostgres)
+
+con <- dbConnect(RPostgres::Postgres(),
+                 dbname = 'int_relations',
+                 host = '127.0.0.1', 
+                 port = 5432, 
+                 user = 'postgres',
+                 password = 'COM3T123')
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
