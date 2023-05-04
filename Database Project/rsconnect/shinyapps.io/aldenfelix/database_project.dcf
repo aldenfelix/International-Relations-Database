@@ -1,0 +1,11 @@
+name: database_project
+title:
+username:
+account: aldenfelix
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9026080
+bundleId: 7172537
+url: https://aldenfelix.shinyapps.io/database_project/
+when: 1683182606.66156
+lastSyncTime: 1683182606.66157

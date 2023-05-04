@@ -1,52 +1,102 @@
-# install.packages(c("DBI", "RPostgres", "shiny))
+#install.packages(c("shiny","DBI","RPostgres","RSQLite"))
 library(shiny)
 library(DBI)
 library(RPostgres)
+library(RSQLite)
+library(rsconnect)
 
-con <- dbConnect(RPostgres::Postgres(),
-                 dbname = 'int_relations',
-                 host = '127.0.0.1', 
-                 port = 5432, 
-                 user = 'postgres',
-                 password = 'COM3T123')
-
-# Define UI for application that draws a histogram
+# Define UI for application
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("International Relations Database"),
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
+    # Slider input for number of rows
+    sliderInput("nrows", "Enter the number of rows to display:",
+                      min = 1,
+                      max = 200000,
+                      value = 15),
 
-        # Show a plot of the generated distribution
+        # Show table output
         mainPanel(
-           plotOutput("distPlot")
+            tabsetPanel(
+              tabPanel("Countries", DT::DTOutput("country_tbl")),
+              tabPanel("Dyads", DT::DTOutput("dyad_tbl")),
+              tabPanel("Events", DT::DTOutput("event_tbl"))
+            )
         )
     )
-)
 
-# Define server logic required to draw a histogram
+
+
+# Define server logic
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+  
+  # Country table
+  table_country <- DT::renderDT({
+    
+    # sqllite
+    # Be sure the data file must be in same folder
+    sqlite_conn <- dbConnect(RSQLite::SQLite(), dbname ='int_relations.db')
+    
+    # Create SQL commmand to join variables from tables for query
+    
+    sqlite_sql="SELECT * FROM country"
+    
+    conn=sqlite_conn
+    str_sql = sqlite_sql
+    
+    on.exit(dbDisconnect(conn), add = TRUE)
+    table_df = dbGetQuery(conn, paste0(str_sql, " LIMIT ", input$nrows, ";"))
+  }, escape = FALSE,)
+  
+  # Dyad table
+  table_dyad <- DT::renderDT({
+    
+    # sqllite
+    # Be sure the data file must be in same folder
+    sqlite_conn <- dbConnect(RSQLite::SQLite(), dbname ='int_relations.db')
+    
+    # Create SQL commmand to join variables from tables for query
+    
+    sqlite_sql="SELECT * FROM dyad"
+    
+    conn=sqlite_conn
+    str_sql = sqlite_sql
+    
+    on.exit(dbDisconnect(conn), add = TRUE)
+    table_df = dbGetQuery(conn, paste0(str_sql, " LIMIT ", input$nrows, ";"))
+  }, escape = FALSE,)
+  
+  # Event table
+  table_event <- DT::renderDT({
+    
+    # sqllite
+    # Be sure the data file must be in same folder
+    sqlite_conn <- dbConnect(RSQLite::SQLite(), dbname ='int_relations.db')
+    
+    # Create SQL commmand to join variables from tables for query
+    
+    sqlite_sql="SELECT * FROM event"
+    
+    conn=sqlite_conn
+    str_sql = sqlite_sql
+    
+    on.exit(dbDisconnect(conn), add = TRUE)
+    table_df = dbGetQuery(conn, paste0(str_sql, " LIMIT ", input$nrows, ";"))
+  }, escape = FALSE,)
+  
+  output$country_tbl <- table_country
+  output$dyad_tbl <- table_dyad
+  output$event_tbl <- table_event
 }
+
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
+
+# Deploy
+#rsconnect::setAccountInfo(name='yourShinyappsaccount', token='*', secret='*')
